@@ -1,7 +1,7 @@
 package com.prhythm.jsp.client.model;
 
-import com.prhythm.jsp.client.util.WebServiceClient;
-import com.prhythm.jsp.client.util.WebServiceUtil;
+import com.prhythm.jsp.client.util.JHttpClientClient;
+import com.prhythm.jsp.client.util.JHttpClientUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -55,19 +55,22 @@ public class JView extends JClientContext.BaseList implements JClientContext.Loa
     @Override
     public JView load() {
         if (loaded) return this;
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(
-                context.getUrl() + WebServiceUtil.Views.URL,
-                WebServiceUtil.Views.GetView
-                        .replace("{listName}", list.getTitle())
-                        .replace("{viewName}", String.format("{%s}", getName()))
-        );
 
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
+        String body = null;
+        try {
+            body = JHttpClientUtil.postText(
+                    context.getUrl() + JHttpClientUtil.Views.URL,
+                    JHttpClientUtil.Views.GetView
+                            .replace("{listName}", list.getTitle())
+                            .replace("{viewName}", String.format("{%s}", getName())),
+                    JHttpClientClient.getWebserviceSopa()
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         Pattern pattern = Pattern.compile("<GetViewResult>(.+)</GetViewResult>", Pattern.MULTILINE);
-        Matcher matcher = pattern.matcher(response.getResponseBody());
+        Matcher matcher = pattern.matcher(body);
         if (matcher.find()) {
             xml = matcher.group(1);
         }

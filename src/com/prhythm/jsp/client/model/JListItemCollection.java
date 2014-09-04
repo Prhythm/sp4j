@@ -1,8 +1,8 @@
 package com.prhythm.jsp.client.model;
 
+import com.prhythm.jsp.client.util.JHttpClientClient;
+import com.prhythm.jsp.client.util.JHttpClientUtil;
 import com.prhythm.jsp.client.util.StringUtil;
-import com.prhythm.jsp.client.util.WebServiceClient;
-import com.prhythm.jsp.client.util.WebServiceUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -56,20 +56,22 @@ public class JListItemCollection extends JClientContext.BaseList implements Coll
         if (pageIndex > 0 && pager.containsKey(pageIndex - 1))
             queryOption += String.format("<Paging ListItemCollectionPositionNext=\"%s\"/>", StringUtil.escapeXml(pager.get(pageIndex - 1)));
 
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(
-                context.getUrl() + WebServiceUtil.Lists.URL,
-                WebServiceUtil.Lists.GetListItems
-                        .replace("{listName}", String.format("{%s}", list.getId()))
-                        .replace("{viewName}", String.format("{%s}", view.getName()))
-                        .replace("{query}", "")
-                        .replace("{viewFields}", "")
-                        .replace("{rowLimit}", "")
-                        .replace("{queryOptions}", queryOption)
-                        .replace("{webID}", "")
-        );
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
+        String body = null;
+        try {
+            body = JHttpClientUtil.postText(
+                    context.getUrl() + JHttpClientUtil.Lists.URL,
+                    JHttpClientUtil.Lists.GetListItems
+                            .replace("{listName}", String.format("{%s}", list.getId()))
+                            .replace("{viewName}", String.format("{%s}", view.getName()))
+                            .replace("{query}", "")
+                            .replace("{viewFields}", "")
+                            .replace("{rowLimit}", "")
+                            .replace("{queryOptions}", queryOption)
+                            .replace("{webID}", ""),
+                    JHttpClientClient.getWebserviceSopa()
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         Document document;
@@ -77,7 +79,7 @@ public class JListItemCollection extends JClientContext.BaseList implements Coll
             document = DocumentBuilderFactory
                     .newInstance()
                     .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                    .parse(new ByteArrayInputStream(body.getBytes()));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -136,20 +138,22 @@ public class JListItemCollection extends JClientContext.BaseList implements Coll
         if (listItemCollectionPositionNext != null && !"".equals(listItemCollectionPositionNext))
             queryOption += String.format("<Paging ListItemCollectionPositionNext=\"%s\"/>", StringUtil.escapeXml(listItemCollectionPositionNext));
 
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(
-                context.getUrl() + WebServiceUtil.Lists.URL,
-                WebServiceUtil.Lists.GetListItems
-                        .replace("{listName}", String.format("{%s}", list.getId()))
-                        .replace("{viewName}", String.format("{%s}", view.getName()))
-                        .replace("{query}", "")
-                        .replace("{viewFields}", "")
-                        .replace("{rowLimit}", "")
-                        .replace("{queryOptions}", queryOption)
-                        .replace("{webID}", "")
-        );
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
+        String body = null;
+        try {
+            body = JHttpClientUtil.postText(
+                    context.getUrl() + JHttpClientUtil.Lists.URL,
+                    JHttpClientUtil.Lists.GetListItems
+                            .replace("{listName}", String.format("{%s}", list.getId()))
+                            .replace("{viewName}", String.format("{%s}", view.getName()))
+                            .replace("{query}", "")
+                            .replace("{viewFields}", "")
+                            .replace("{rowLimit}", "")
+                            .replace("{queryOptions}", queryOption)
+                            .replace("{webID}", ""),
+                    JHttpClientClient.getWebserviceSopa()
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         Document document;
@@ -157,7 +161,7 @@ public class JListItemCollection extends JClientContext.BaseList implements Coll
             document = DocumentBuilderFactory
                     .newInstance()
                     .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                    .parse(new ByteArrayInputStream(body.getBytes()));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

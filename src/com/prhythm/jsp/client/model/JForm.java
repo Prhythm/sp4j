@@ -1,7 +1,7 @@
 package com.prhythm.jsp.client.model;
 
-import com.prhythm.jsp.client.util.WebServiceClient;
-import com.prhythm.jsp.client.util.WebServiceUtil;
+import com.prhythm.jsp.client.util.JHttpClientClient;
+import com.prhythm.jsp.client.util.JHttpClientUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -26,15 +26,17 @@ public class JForm extends JClientContext.BaseList implements JClientContext.Loa
     public JForm load() {
         if (loaded) return this;
 
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(
-                context.getUrl() + WebServiceUtil.Forms.URL,
-                WebServiceUtil.Forms.GetFormCollection
-                        .replace("{listName}", list.getId().toString())
-                        .replace("{formUrl}", getUrl())
-        );
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
+        String body = null;
+        try {
+            body = JHttpClientUtil.postText(
+                    context.getUrl() + JHttpClientUtil.Forms.URL,
+                    JHttpClientUtil.Forms.GetFormCollection
+                            .replace("{listName}", list.getId().toString())
+                            .replace("{formUrl}", getUrl()),
+                    JHttpClientClient.getWebserviceSopa()
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         Document document;
@@ -42,7 +44,7 @@ public class JForm extends JClientContext.BaseList implements JClientContext.Loa
             document = DocumentBuilderFactory
                     .newInstance()
                     .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                    .parse(new ByteArrayInputStream(body.getBytes()));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

@@ -1,8 +1,8 @@
 package com.prhythm.jsp.client.model;
 
 import com.prhythm.jsp.client.model.port.SiteContent;
-import com.prhythm.jsp.client.util.WebServiceClient;
-import com.prhythm.jsp.client.util.WebServiceUtil;
+import com.prhythm.jsp.client.util.JHttpClientClient;
+import com.prhythm.jsp.client.util.JHttpClientUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -40,13 +40,15 @@ public class JWeb extends JClientContext.BaseContext implements SiteContent, JCl
 
     @Override
     public JWeb load() {
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(
-                context.getUrl() + WebServiceUtil.Webs.URL,
-                WebServiceUtil.Webs.GetWeb.replace("{webUrl}", context.getUrl())
-        );
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
+        String body = null;
+        try {
+            body = JHttpClientUtil.postText(
+                    context.getUrl() + JHttpClientUtil.Webs.URL,
+                    JHttpClientUtil.Webs.GetWeb.replace("{webUrl}", context.getUrl()),
+                    JHttpClientClient.getWebserviceSopa()
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         Document document;
@@ -54,7 +56,7 @@ public class JWeb extends JClientContext.BaseContext implements SiteContent, JCl
             document = DocumentBuilderFactory
                     .newInstance()
                     .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                    .parse(new ByteArrayInputStream(body.getBytes()));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

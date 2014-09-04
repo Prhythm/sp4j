@@ -1,22 +1,19 @@
 package com.prhythm.jsp.client.model;
 
-import com.prhythm.jsp.client.util.WebServiceClient;
-import com.prhythm.jsp.client.util.WebServiceUtil;
+import com.prhythm.jsp.client.util.JHttpClientClient;
+import com.prhythm.jsp.client.util.JHttpClientUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.UUID;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by bruce_c_tsai on 8/25/2014.
@@ -78,20 +75,18 @@ public class JViewCollection extends JClientContext.BaseList implements Collecti
         return this;
     }
 
-    NodeList getDataFromViewWS() throws ParserConfigurationException, IOException, SAXException {
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(
-                context.getUrl() + WebServiceUtil.Views.URL,
-                WebServiceUtil.Views.GetViewCollection.replace("{listName}", list.getTitle())
+    NodeList getDataFromViewWS() throws Exception {
+        String body = null;
+        body = JHttpClientUtil.postText(
+                context.getUrl() + JHttpClientUtil.Views.URL,
+                JHttpClientUtil.Views.GetViewCollection.replace("{listName}", list.getTitle()),
+                JHttpClientClient.getWebserviceSopa()
         );
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
-        }
 
         Document document = DocumentBuilderFactory
                 .newInstance()
                 .newDocumentBuilder()
-                .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                .parse(new ByteArrayInputStream(body.getBytes()));
 
         return document.getElementsByTagName("View");
     }

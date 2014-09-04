@@ -1,17 +1,15 @@
 package com.prhythm.jsp.client.model;
 
+import com.prhythm.jsp.client.util.JHttpClientClient;
+import com.prhythm.jsp.client.util.JHttpClientUtil;
 import com.prhythm.jsp.client.util.StringUtil;
-import com.prhythm.jsp.client.util.WebServiceClient;
-import com.prhythm.jsp.client.util.WebServiceUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -21,7 +19,6 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by Bruce on 8/18/2014.
@@ -145,13 +142,15 @@ public class JListCollection extends JClientContext.BaseWeb implements Collectio
     protected JList loadList(String title) {
         if (title == null || title.length() == 0) throw new IllegalArgumentException();
 
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(
-                context.getUrl() + WebServiceUtil.Lists.URL,
-                WebServiceUtil.Lists.GetList.replace("{listName}", StringUtil.escapeXml(title))
-        );
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
+        String body = null;
+        try {
+            body = JHttpClientUtil.postText(
+                    context.getUrl() + JHttpClientUtil.Lists.URL,
+                    JHttpClientUtil.Lists.GetList.replace("{listName}", StringUtil.escapeXml(title)),
+                    JHttpClientClient.getWebserviceSopa()
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         Node item;
@@ -160,7 +159,7 @@ public class JListCollection extends JClientContext.BaseWeb implements Collectio
             document = DocumentBuilderFactory
                     .newInstance()
                     .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                    .parse(new ByteArrayInputStream(body.getBytes()));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -179,20 +178,21 @@ public class JListCollection extends JClientContext.BaseWeb implements Collectio
             throw new RuntimeException(ex);
         }
 
-        response = WebServiceUtil.execute(
-                context.getUrl() + WebServiceUtil.SiteData.URL,
-                WebServiceUtil.SiteData.GetList.replace("{strListName}", StringUtil.escapeXml(title))
-        );
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
+        try {
+            body = JHttpClientUtil.postText(
+                    context.getUrl() + JHttpClientUtil.Lists.URL,
+                    JHttpClientUtil.Lists.GetList.replace("{listName}", StringUtil.escapeXml(title)),
+                    JHttpClientClient.getWebserviceSopa()
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         try {
             document = DocumentBuilderFactory
                     .newInstance()
                     .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                    .parse(new ByteArrayInputStream(body.getBytes()));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -345,32 +345,34 @@ public class JListCollection extends JClientContext.BaseWeb implements Collectio
         }
     }
 
-    NodeList getDataFromListWS() throws ParserConfigurationException, IOException, SAXException {
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(context.getUrl() + WebServiceUtil.Lists.URL, WebServiceUtil.Lists.GetListCollection);
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
-        }
+    NodeList getDataFromListWS() throws Exception {
+        String body = null;
+        body = JHttpClientUtil.postText(
+                context.getUrl() + JHttpClientUtil.Lists.URL,
+                JHttpClientUtil.Lists.GetListCollection,
+                JHttpClientClient.getWebserviceSopa()
+        );
 
         Document document = DocumentBuilderFactory
                 .newInstance()
                 .newDocumentBuilder()
-                .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                .parse(new ByteArrayInputStream(body.getBytes()));
 
         return document.getElementsByTagName("List");
     }
 
-    NodeList getDataFromSiteDataWS() throws ParserConfigurationException, IOException, SAXException {
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(context.getUrl() + WebServiceUtil.SiteData.URL, WebServiceUtil.SiteData.GetListCollection);
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
-        }
+    NodeList getDataFromSiteDataWS() throws Exception {
+        String body = null;
+        body = JHttpClientUtil.postText(
+                context.getUrl() + JHttpClientUtil.SiteData.URL,
+                JHttpClientUtil.SiteData.GetListCollection,
+                JHttpClientClient.getWebserviceSopa()
+        );
 
         Document document = DocumentBuilderFactory
                 .newInstance()
                 .newDocumentBuilder()
-                .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                .parse(new ByteArrayInputStream(body.getBytes()));
 
         NodeList vList = document.getElementsByTagName("vLists");
         if (vList.getLength() > 0) {

@@ -1,8 +1,8 @@
 package com.prhythm.jsp.client.model;
 
 import com.prhythm.jsp.client.model.port.Disposable;
-import com.prhythm.jsp.client.util.WebServiceClient;
-import com.prhythm.jsp.client.util.WebServiceUtil;
+import com.prhythm.jsp.client.util.JHttpClientClient;
+import com.prhythm.jsp.client.util.JHttpClientUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -72,22 +72,23 @@ public class JClientContext implements Disposable {
     public JUser getCurrentUser() {
         if (currentUser != null) return currentUser;
 
-        WebServiceClient.WebServiceResponse response = WebServiceUtil.execute(
-                getUrl() + WebServiceUtil.UserGroup.URL,
-                WebServiceUtil.UserGroup.GetCurrentUserInfo
-        );
-
-        if (response.getStatusCode() != 200) {
-            throw new RuntimeException(String.format("Http %d %s", response.getStatusCode(), response.getReason()));
+        String body = null;
+        try {
+            body = JHttpClientUtil.postText(
+                    getUrl() + JHttpClientUtil.UserGroup.URL,
+                    JHttpClientUtil.UserGroup.GetCurrentUserInfo,
+                    JHttpClientClient.getWebserviceSopa()
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
-
 
         Document document;
         try {
             document = DocumentBuilderFactory
                     .newInstance()
                     .newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(response.getResponseBody().getBytes()));
+                    .parse(new ByteArrayInputStream(body.getBytes()));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
